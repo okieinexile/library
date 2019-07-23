@@ -26,8 +26,14 @@ def ansf2(t: float) -> float:
 def finv(t,x):
     return 1/t
 
+def ansfinv(t: float) -> float:
+    return np.log(t)
+
 def fexp(t,x):
-    return x
+    return t
+
+def ansfexp(t: float) -> float:
+    return np.exp(t)
 
 def test1(t: float, x: float) -> float:
     """A benchmark function"""    

@@ -16,8 +16,8 @@ def euler(M: int, h: float, t: float, x: float,
     h is the step size
     t is the initial value of the parameter
     x is the initival value of the function
-    it returns a dictionary containing the knots and values
-    that can be put into a spline
+    it returns a list of M + 1 ordered pairs
+    
     """    
     interval = [t]
     X = [x]
@@ -41,7 +41,7 @@ def heun(M: int, h: float, t: float, x: float,
     t is the initial value of the parameter
     x is the initival value of the function
     it returns a dictionary containing the knots and values
-    that can be put into a spline
+    it returns a list of M + 1 ordered pairs
     """
     answer = [(t, x)]
     for k in range(M):
@@ -62,8 +62,7 @@ def runge_kutta4(M: int, h: float, t: float, x: float,
     h is the step size
     t is the initial value of the parameter
     x is the initival value of the function
-    it returns a dictionary containing the knots and values
-    that can be put into a spline
+    it returns a list of M + 1 ordered pairs
     """
     answer = [(t, x)]
     for k in range(M):
@@ -85,8 +84,7 @@ def runge_kutta5(M: int, h: float, t: float, x: float, f: Callable):
     h is the step size
     t is the initial value of the parameter
     x is the initival value of the function
-    it returns a dictionary containing the knots and values
-    that can be put into a spline
+    it returns a list of M + 1 ordered pairs
     """       
 
     answer = [(t, x)]
