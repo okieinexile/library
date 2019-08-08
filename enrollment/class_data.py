@@ -487,8 +487,17 @@ class Scraper:
 
 
 class DataCleaner:
-
+    """
+    When data is scraped from the website it is saved to a CSV file.  However
+    these files are not necessarily in a form which can be take to a DateFrame
+    by pandas.  DataCleaner provides methods to clean the files that have been
+    scraped from the Web to transform them to a pandas friendly format.
+    """ 
     def __init__(self, dept_code: str, dept_prefixes: list = None) -> None:
+        """
+        We initialize a DataCleaner with the department code and the course
+        prefixes that are used by that department.
+        """        
         self.dept: list = dept_code
         self.clean_data = CLEAN_DATA
         self.unclean_data = UNCLEAN_DATA
@@ -497,6 +506,10 @@ class DataCleaner:
         return None
     
     def clean_csv(self) -> None:
+        """
+        This takes the files from the unclean directory, cleans them, and saves
+        the result in the clean directory.
+        """        
         directory_files: list = DataCleaner.files_in_directory(self.unclean_data)
         my_files = filter(lambda f: self.is_dept(f), directory_files)
         for filename in my_files:
@@ -511,6 +524,13 @@ class DataCleaner:
     
     @staticmethod
     def files_in_directory(subdirectory: str = None) -> list:
+        """
+        This method generates a list of files in a particular subdirectory of
+        the current working directory.
+        """
+        
+        # If no subdirectory is specified, we simple use the current working
+        # directory.      
         if subdirectory is None:
             mypath:str = getcwd()        
         else:
@@ -528,6 +548,10 @@ class DataCleaner:
     
     @staticmethod 
     def new_name(filename: str) -> str:
+        """
+        This takes the name of an unclean file and transforms it to the name
+        for the corresponding clean file.
+        """        
         fmt: str = '{}_clean_{:02d}{}.{}'
         stub, ext = filename.split('.')
         dept, _, _, sem = stub.split('_')
