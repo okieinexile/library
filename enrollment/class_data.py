@@ -448,7 +448,6 @@ class Scraper:
         return sections
 
     def _get_schedule_data(self, table) -> list:
-        #cols=get_column_titles(table)
         sections=[]
         for row in table.select('tr')[1:-1]:
             course_id=row.select('td')[0].text
