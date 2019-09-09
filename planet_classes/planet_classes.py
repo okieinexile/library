@@ -32,7 +32,7 @@ import pylab as plt
 
 
 # This is the default location of the data file.
-PLANETARY_DATA='data/cleaned_data.csv'
+PLANETARY_DATA='data/cleaned_data_old.csv'
 UNCLEAN_DATA = 'data/planetary_data_2019.csv'
 
 def clean_data() -> None:
@@ -150,9 +150,9 @@ class Planet():
         the base day of 1/1/1800.
         """
         final_day: int = int(self.perihelion() + self.period())
-        position_data: list = self._put_in_position(final_day)
-        X: list = list(map(lambda x: x[1], position_data))
-        Y: list = list(map(lambda x: x[2], position_data))
+        position_data: list = list(self._put_in_position(final_day))
+        X: list = list(map(lambda x: x[1][0], position_data))
+        Y: list = list(map(lambda x: x[1][1], position_data))
         plt.axis('equal')
         # plot only total orbit
         if particular_day is None:
@@ -266,8 +266,10 @@ class Planet():
     
 class PlanetarySystem:
     
-    def __init__(self, list_of_names: list = None, base_planet: str = None) -> None:
-        self.filename: str = PLANETARY_DATA
+    def __init__(self, list_of_names: list = None, 
+                 base_planet: str = None,
+                 filename: str = PLANETARY_DATA) -> None:
+        self.filename: str = filename
         if list_of_names is None:
             self.names: list = None
             self.base: str = base_planet
@@ -286,19 +288,15 @@ class PlanetarySystem:
                                              for key in self.names)
         return None
     
-    def read_csv(self, filename: str = PLANETARY_DATA, 
-                 base_planet: str = 'Earth') -> None:
+    @classmethod
+    def read_csv(cls, filename: str = PLANETARY_DATA, 
+                 base_planet: str = 'Earth') -> 'PlanetarySystem':
         df: pd.DataFrame = pd.read_csv(filename)
         df.set_index('name',  inplace = True)
-        self.names: list = list(df.index)
-        if not(base_planet in self.names):
+        list_of_names: list = list(df.index)
+        if not(base_planet in list_of_names):
             raise ValueError('{} not in file list'.format(base_planet))
-        self.base: str = base_planet
-        self.planet: dict = self._get_planets()
-        self.base_planet: Planet = self.planet[self.base]
-        self._recent_perihelion: float = max(self.planet[key].perihelion() 
-                                             for key in self.names)
-        return None
+        return cls(list_of_names, base_planet, filename)
         
     def _get_planets(self) -> dict():
         """
@@ -326,10 +324,13 @@ class PlanetarySystem:
             first_day_planet = min(map(lambda x: x[0], planet_orbit))
             planet_data = dict((x[0],(x[1], x[2], x[3])) for x in planet_orbit)
             for day in range(max(first_day_base,first_day_planet), final_day+1):
-                relative_position[name][day]= (
-                        planet_data[day][0] - base_data[day][0],
-                        planet_data[day][1] - base_data[day][1],
-                        planet_data[day][2] - base_data[day][2])                                             
+                try:
+                    relative_position[name][day]= (
+                            planet_data[day][0] - base_data[day][0],
+                            planet_data[day][1] - base_data[day][1],
+                            planet_data[day][2] - base_data[day][2])    
+                except:
+                    continue
         return relative_position
     
     def position_of(self, planet_name: str, day: int) -> tuple:
@@ -348,6 +349,7 @@ class PlanetarySystem:
         return (x1 - x0, y1 - y0, z1 - z0)
     
     def plot(self, particular_day: int = None) -> None:
+        plt.clf()
         if particular_day < self._recent_perihelion:
             raise ValueError('Date must be later that {}'.format(
                     self._recent_perihelion()))
@@ -362,32 +364,37 @@ class PlanetarySystem:
     
 class SkyTools:
     
-    def __init__(self, latitude: tuple, 
-                 longitude: tuple, final_day: str) -> None:
+    
+    def __init__(self, latitude: tuple = None, longitude: tuple = None) -> None:
+        self._set_constants()
+        # Change latitude and longitude from the form
+        # (degrees, minutes, seconds, sign) to degrees in decimal.
+        # The tuple input form is meant for web applications
+        if not( latitude is None) and not( longitude is None): 
+            self.latitude = latitude[3] * ( latitude[0] +
+                                    latitude[1] / 60 + 
+                                    latitude[2] / 3600) / 180*np.pi
+            self.longitude = longitude[3] * (longitude[0] + 
+                                      longitude[1] / 60 + 
+                                      longitude[2] / 3600) / 180*np.pi
+        return None
+    
+    def _set_constants(self) -> None:
         self._BASE_DAY: str = '1/1/1800'
         self._D_M_S: str = '{}d{}m{}s'
         self._D_M_S_s: str = '{}d{}m{}s{}'
         self._H_M_S: str = '{}h{}m{}s'
         self._TIME: str = '{:02d}:{:02d}:{:02d}'
         self._FILES: str = 'data/{}_position_{}.csv'
-        self._final_day: int = self._ord_day(final_day)
         self._system_set: bool = False
-        self._view_sky: bool = False
-        # Change latitude and longitude from the form
-        # (degrees, minutes, seconds, sign) to degrees in decimal.
-        # The tuple input form is meant for web applications
-        self.latitude = latitude[3] * ( latitude[0] +
-                                latitude[1] / 60 + 
-                                latitude[2] / 3600) / 180*np.pi
-        self.longitude = longitude[3] * (longitude[0] + 
-                                  longitude[1] / 60 + 
-                                  longitude[2] / 3600) / 180*np.pi
+        self._view_sky: bool = False   
         return None
     
-    def set_system(self, list_of_names: list, base_planet: str) -> None:
+    def set_system(self, list_of_names: list, base_planet: str, final_day: str) -> None:
         self._system_set: bool = True        
         self.planetary_system: PlanetarySystem = PlanetarySystem(list_of_names, base_planet)
         self.base_planet: Planet = self.planetary_system.base_planet
+        self._final_day: int = self._ord_day(final_day)        
         RC, SC = self._celestial_coords()
         self.rectangular_coords: dict = RC
         self.celestial_coords: dict = SC
@@ -429,6 +436,7 @@ class SkyTools:
     def plot(self, date: str) -> None:
         particular_day: int = self._ord_day(date)
         self.planetary_system.plot(particular_day)
+        plt.savefig('images/image.jpg')
         return None
     
     def position_of(self, planet_name: str, date: str, time: str ='00:00:00'):
