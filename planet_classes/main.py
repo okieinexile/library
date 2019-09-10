@@ -8,7 +8,7 @@ Created on Sun Sep  8 09:00:34 2019
 
 import numpy as np
 import matplotlib.pylab as plt
-import application as app
+import orbit_widget as ow
 
-my_app = app.Application(master = None, year = 2019)
+my_app = ow.OrbitWidget(None,  2019)
 my_app.mainloop()

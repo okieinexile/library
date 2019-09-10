@@ -32,7 +32,7 @@ import pylab as plt
 
 
 # This is the default location of the data file.
-PLANETARY_DATA='data/cleaned_data_old.csv'
+PLANETARY_DATA='data/cleaned_data.csv'
 UNCLEAN_DATA = 'data/planetary_data_2019.csv'
 
 def clean_data() -> None:
@@ -62,7 +62,10 @@ class Planet():
         self.name: str = name
         self._data: dict = self._read_csv()
         self.matrix = self._get_matrix()
-        self.tilt : np.matrix = self._rotation(self._data['tilt'],[1,0,0])          
+        try:
+            self.tilt : np.matrix = self._rotation(self._data['tilt'],[1,0,0])          
+        except:
+            self.tilt = None
         return None
 # Exposing data
         
@@ -250,7 +253,10 @@ class Planet():
         my_data['omega']: float = df.loc[self.name, 'omega']
         my_data['perihelion']: float = df.loc[self.name, 'perihelion']
         my_data['period']: float = df.loc[self.name, 'period']
-        my_data['tilt']: float = df.loc[self.name, 'tilt']
+        try:
+            my_data['tilt']: float = df.loc[self.name, 'tilt']
+        except:
+            pass
         return my_data
     
     def set_path(self, user_data: str ) -> None:
